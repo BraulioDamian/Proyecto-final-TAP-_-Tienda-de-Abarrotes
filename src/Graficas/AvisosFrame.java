@@ -68,8 +68,12 @@ public class AvisosFrame extends javax.swing.JFrame {
     private DefaultTableModel modeloOferta;
     
     public AvisosFrame() {
+         setUndecorated(true); // Hacer que el JFrame sea indecorado
+
         initComponents();
         agregarEfectoHover();
+        setLocationRelativeTo(null); // Centra la ventana en la pantalla
+
         modeloReabastecer = (DefaultTableModel)pocas.getModel();
         modeloOferta = (DefaultTableModel)prox.getModel();
         
@@ -103,6 +107,8 @@ public class AvisosFrame extends javax.swing.JFrame {
         this.usuarioLogueado = usuario;
         configurarVisibilidadComponentes();
     }
+    
+    
     
     private void configurarVisibilidadComponentes() {
         if (usuarioLogueado.getRol() == Usuario.Rol.EMPLEADO) {
@@ -147,7 +153,10 @@ public class AvisosFrame extends javax.swing.JFrame {
         isCalendarOpen = false;
     }
 
-        
+    // Método para reiniciar la instancia Singleton
+    public static void resetInstance() {
+        instance = null;
+    }       
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -511,6 +520,11 @@ public class AvisosFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_Ventas2MouseClicked
 
     private void Analisis2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Analisis2MouseClicked
+        AvisosFrame avisosFrame = AvisosFrame.getInstance();
+        avisosFrame.initialize(SesionManager.getInstance().getUsuarioLogueado());
+        avisosFrame.setVisible(true);
+        this.setVisible(false);
+        AvisosFrame.getInstance().comparar();
 
     }//GEN-LAST:event_Analisis2MouseClicked
 

@@ -9,6 +9,7 @@ import DBObjetos.Area;
 import INVENTARIO.*;
 import DBObjetos.Usuario;
 import DBObjetos.Usuario.Rol;
+import Graficas.AvisosFrame;
 import PanelUsuarios.UsuariosPanel;
 import Principal.MenuPrincipal;
 import Venta.Venta;
@@ -64,7 +65,7 @@ public class Configuraciones extends javax.swing.JFrame {
        // Se modificó el constructor para ser privado
 
     private  Configuraciones() {
-
+        setUndecorated(true); // Hacer que el JFrame sea indecorado
         initComponents();
         setLocationRelativeTo(null); // Centramos la ventana en la pantalla
 
@@ -78,6 +79,8 @@ public class Configuraciones extends javax.swing.JFrame {
          
          cargarAreasEnComboBox();
          animador = new AnimacionPanel(); // Inicializa el animador
+         
+         
 
     }
     
@@ -102,7 +105,10 @@ public class Configuraciones extends javax.swing.JFrame {
         dispose(); // Cierra esta ventana
     }
     
-    
+    // Método para reiniciar la instancia Singleton
+    public static void resetInstance() {
+        instance = null;
+    }   
     
             
 
@@ -631,7 +637,11 @@ private int obtenerAreaID(String nombreAreaSeleccionada) throws SQLException, Il
     }//GEN-LAST:event_Ventas2MouseClicked
 
     private void Analisis2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Analisis2MouseClicked
-
+        AvisosFrame avisosFrame = AvisosFrame.getInstance();
+        avisosFrame.initialize(SesionManager.getInstance().getUsuarioLogueado());
+        avisosFrame.setVisible(true);
+        this.setVisible(false);
+        AvisosFrame.getInstance().comparar();
     }//GEN-LAST:event_Analisis2MouseClicked
 
     private void Inventario2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Inventario2MouseClicked

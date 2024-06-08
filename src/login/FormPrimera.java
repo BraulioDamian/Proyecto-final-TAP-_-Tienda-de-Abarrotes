@@ -75,7 +75,6 @@ private void volverALogin() {
         btnContraseña1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(596, 530));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         btnAgregar.setText("Agregar");
@@ -137,7 +136,7 @@ private void volverALogin() {
         });
         getContentPane().add(nomUsuario, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 240, 311, 80));
 
-        ContraseñaToken.setText("Contraseña");
+        ContraseñaToken.setText("Contraseña token");
         ContraseñaToken.setBorder(javax.swing.BorderFactory.createTitledBorder("Contraseña"));
         ContraseñaToken.setEchoChar('\u0000');
         ContraseñaToken.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -148,7 +147,13 @@ private void volverALogin() {
                 ContraseñaTokenFocusLost(evt);
             }
         });
+        ContraseñaToken.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ContraseñaTokenActionPerformed(evt);
+            }
+        });
         getContentPane().add(ContraseñaToken, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 430, 152, 70));
+        ContraseñaToken.getAccessibleContext().setAccessibleName("Contraseña Token");
 
         Contraseña.setText("Contraseña");
         Contraseña.setBorder(javax.swing.BorderFactory.createTitledBorder("Contraseña"));
@@ -179,30 +184,71 @@ private void volverALogin() {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+   
+    
+    private boolean validarCampos() {
+        String usuario = nomUsuario.getText().trim();
+        String contraseñaPlana = new String(Contraseña.getPassword()).trim();
+        String correo = Correo.getText().trim();
+        String nombre = Nombre.getText().trim();
+        String apellido = Apellido.getText().trim();
+        String contraseñaTokenPlana = new String(ContraseñaToken.getPassword()).trim();
 
-    private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
-    // Obtener valores de los campos de texto
-    String usuario = nomUsuario.getText().trim();
-    String contraseñaPlana = ContraseñaToken.getText().trim();
-    String correo = Correo.getText().trim();
-    String nombre = Nombre.getText().trim();
-    String apellido = Apellido.getText().trim();
-    String contraseñaTokenPlana = ContraseñaToken.getText().trim();
+        // Verifica que se hayan ingresado todos los campos
+        boolean camposValidos = !usuario.isEmpty() && !contraseñaPlana.isEmpty() &&
+                                !correo.isEmpty() && !nombre.isEmpty() && !apellido.isEmpty();
 
-    // Verifica que se hayan ingresado todos los campos
-    boolean camposValidos = !usuario.isEmpty() && !contraseñaPlana.isEmpty() &&
-                            !correo.isEmpty() && !nombre.isEmpty() && !apellido.isEmpty();
+        // Validación del formato del correo electrónico
+        boolean esCorreoValido = correo.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
 
-    // Validación del formato del correo electrónico
-    boolean esCorreoValido = correo.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
+        // Validación del nombre y apellido (solo letras)
+        boolean esNombreValido = nombre.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+");
+        boolean esApellidoValido = apellido.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+");
 
-    if (!esCorreoValido) {
-        JOptionPane.showMessageDialog(this, "El formato del correo electrónico no es válido.");
-        return;
+        // Validación de la longitud de la contraseña
+        boolean esContraseñaValida = contraseñaPlana.length() >= 8;
+
+        if (!camposValidos) {
+            JOptionPane.showMessageDialog(this, "Por favor complete todos los campos requeridos.");
+            return false;
+        }
+
+        if (!esCorreoValido) {
+            JOptionPane.showMessageDialog(this, "El formato del correo electrónico no es válido.");
+            return false;
+        }
+
+        if (!esNombreValido) {
+            JOptionPane.showMessageDialog(this, "El nombre solo puede contener letras.");
+            return false;
+        }
+
+        if (!esApellidoValido) {
+            JOptionPane.showMessageDialog(this, "El apellido solo puede contener letras.");
+            return false;
+        }
+
+        if (!esContraseñaValida) {
+            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 8 caracteres.");
+            return false;
+        }
+
+        return true;
     }
+    
+    private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
+        if (!validarCampos()) {
+            return; // Si la validación falla, no continuar
+        }
 
-    // Verifica que se hayan respondido 3 preguntas
-    if (camposValidos) {
+        // Obtener valores de los campos de texto
+        String usuario = nomUsuario.getText().trim();
+        String contraseñaPlana = new String(Contraseña.getPassword()).trim();
+        String correo = Correo.getText().trim();
+        String nombre = Nombre.getText().trim();
+        String apellido = Apellido.getText().trim();
+        String contraseñaTokenPlana = new String(ContraseñaToken.getPassword()).trim();
+
         try {
             // Hashear la contraseña y el token antes de enviarlos a la base de datos
             String contraseñaHasheada = HashingUtil.hashPassword(contraseñaPlana);
@@ -210,12 +256,12 @@ private void volverALogin() {
             if (contraseñaHasheada == null || contraseñaTokenHasheada == null) {
                 throw new IllegalArgumentException("No se pudo hashear la contraseña o el token.");
             }
-            
+
             // Crea una instancia de CONSULTASDAO
             CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-            
+
             // El método crearEmpleado ahora también incluye contraseñaToken
-            boolean exito = dao.crearEmpleado(usuario, contraseñaHasheada, Usuario.Rol.ADMINISTRADOR, contraseñaTokenHasheada , correo, nombre, apellido);
+            boolean exito = dao.crearEmpleado(usuario, contraseñaHasheada, Usuario.Rol.ADMINISTRADOR, contraseñaTokenHasheada, correo, nombre, apellido);
 
             if (exito) {
                 JOptionPane.showMessageDialog(this, "Empleado agregado correctamente.");
@@ -228,11 +274,8 @@ private void volverALogin() {
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage());
         }
-    } else {
-        JOptionPane.showMessageDialog(this, "Por favor complete todos los campos requeridos.");
-    }
 
-    volverALogin();
+        volverALogin();
 
     }//GEN-LAST:event_btnAgregarActionPerformed
 
@@ -245,9 +288,14 @@ private void volverALogin() {
     }//GEN-LAST:event_NombreFocusGained
 
     private void NombreFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_NombreFocusLost
-        if(Nombre.getText().length()==0){
+        if (Nombre.getText().length() == 0) {
             Estilos.addPlaceholderStyle(Nombre);
             Nombre.setText("Nombre");
+        } else {
+            if (!Nombre.getText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+                JOptionPane.showMessageDialog(this, "El nombre solo puede contener letras.");
+                Nombre.requestFocus();
+            }
         }
     }//GEN-LAST:event_NombreFocusLost
 
@@ -260,9 +308,14 @@ private void volverALogin() {
     }//GEN-LAST:event_ApellidoFocusGained
 
     private void ApellidoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ApellidoFocusLost
-        if(Apellido.getText().length()==0){
+        if (Apellido.getText().length() == 0) {
             Estilos.addPlaceholderStyle(Apellido);
             Apellido.setText("Apellido");
+        } else {
+            if (!Apellido.getText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+                JOptionPane.showMessageDialog(this, "El apellido solo puede contener letras.");
+                Apellido.requestFocus();
+            }
         }
     }//GEN-LAST:event_ApellidoFocusLost
 
@@ -275,9 +328,14 @@ private void volverALogin() {
     }//GEN-LAST:event_CorreoFocusGained
 
     private void CorreoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_CorreoFocusLost
-        if(Correo.getText().length()==0){
+        if (Correo.getText().length() == 0) {
             Estilos.addPlaceholderStyle(Correo);
             Correo.setText("Correo");
+        } else {
+            if (!Correo.getText().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
+                JOptionPane.showMessageDialog(this, "El formato del correo electrónico no es válido.");
+                Correo.requestFocus();
+            }
         }
     }//GEN-LAST:event_CorreoFocusLost
 
@@ -297,30 +355,45 @@ private void volverALogin() {
     }//GEN-LAST:event_nomUsuarioFocusLost
 
     private void ContraseñaTokenFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ContraseñaTokenFocusGained
-        if(ContraseñaToken.getText().equals("Contraseña")){
+        if (new String(ContraseñaToken.getPassword()).equals("Contraseña")) {
             ContraseñaToken.setText(null);
             ContraseñaToken.requestFocus();
             ContraseñaToken.setEchoChar('*');
             Estilos.removePlaceholderStyle(ContraseñaToken);
-            //jPasswordField2.setEchoChar('\u0000');
-
         }
     }//GEN-LAST:event_ContraseñaTokenFocusGained
 
     private void ContraseñaTokenFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ContraseñaTokenFocusLost
-        if(ContraseñaToken.getText().length()==0){
+        String contraseña = new String(ContraseñaToken.getPassword());
+        if (contraseña.length() == 0) {
             Estilos.addPlaceholderStyle(ContraseñaToken);
             ContraseñaToken.setText("Contraseña");
-            //jPasswordField2.setEchoChar('*');
+            ContraseñaToken.setEchoChar('\u0000');
+        } else if (contraseña.length() < 8) {
+            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 8 caracteres.");
+            ContraseñaToken.requestFocus();
         }
     }//GEN-LAST:event_ContraseñaTokenFocusLost
 
     private void ContraseñaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ContraseñaFocusGained
-        // TODO add your handling code here:
+        if (new String(Contraseña.getPassword()).equals("Contraseña")) {
+            Contraseña.setText(null);
+            Contraseña.requestFocus();
+            Contraseña.setEchoChar('*');
+            Estilos.removePlaceholderStyle(Contraseña);
+        }
     }//GEN-LAST:event_ContraseñaFocusGained
 
     private void ContraseñaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ContraseñaFocusLost
-        // TODO add your handling code here:
+        String contraseña = new String(Contraseña.getPassword());
+        if (contraseña.length() == 0) {
+            Estilos.addPlaceholderStyle(Contraseña);
+            Contraseña.setText("Contraseña");
+            Contraseña.setEchoChar('\u0000');
+        } else if (contraseña.length() < 8) {
+            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 8 caracteres.");
+            Contraseña.requestFocus();
+        }
     }//GEN-LAST:event_ContraseñaFocusLost
 
     private void btnContraseñaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnContraseñaActionPerformed
@@ -354,6 +427,10 @@ private void volverALogin() {
 
         }
     }//GEN-LAST:event_btnContraseña1ActionPerformed
+
+    private void ContraseñaTokenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ContraseñaTokenActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ContraseñaTokenActionPerformed
 
 private void resetFormulario() {
     // Restablecer los campos del formulario

@@ -465,17 +465,16 @@ public Usuario validarUsuario(String nombreUsuario, String contraseñaPlana) thr
 
 
     // Método para actualizar los datos de un usuario
-    public boolean actualizarUsuario(int usuarioId, String nombreUsuario, String contraseña, String rol, String email, String nombreCompleto, String preguntaSeguridad, String respuestaSeguridad) {
-        String query = "UPDATE usuario SET NombreUsuario = ?, Contraseña = ?, Rol = ?, Email = ?, NombreCompleto = ?, PreguntaSeguridad = ?, RespuestaSeguridad = ? WHERE UsuarioID = ?";
+    public boolean actualizarUsuario(int usuarioId, String nombreUsuario, String contraseña, String rol, String email, String nombreCompleto) {
+        // Nota que se han eliminado las partes de PreguntaSeguridad y RespuestaSeguridad
+        String query = "UPDATE usuario SET NombreUsuario = ?, Contraseña = ?, Rol = ?, Email = ?, NombreCompleto = ? WHERE UsuarioID = ?";
         try (PreparedStatement stmt = con.prepareStatement(query)) {
             stmt.setString(1, nombreUsuario);
             stmt.setString(2, contraseña);
             stmt.setString(3, rol);
             stmt.setString(4, email);
             stmt.setString(5, nombreCompleto);
-            stmt.setString(6, preguntaSeguridad);
-            stmt.setString(7, respuestaSeguridad);
-            stmt.setInt(8, usuarioId);
+            stmt.setInt(6, usuarioId); // Actualiza el índice aquí para el ID del usuario
 
             int affectedRows = stmt.executeUpdate();
             return affectedRows > 0;
@@ -484,6 +483,7 @@ public Usuario validarUsuario(String nombreUsuario, String contraseñaPlana) thr
             return false;
         }
     }
+
 
     // Método para eliminar un usuario
     public boolean eliminarUsuario(int usuarioId) {

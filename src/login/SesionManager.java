@@ -4,7 +4,13 @@
  */
 package login;
 
+import Configuraciones.Configuraciones;
 import DBObjetos.Usuario;
+import Graficas.AvisosFrame;
+import INVENTARIO.Principal2_0;
+import PanelUsuarios.UsuariosPanel;
+import Principal.MenuPrincipal;
+import Venta.Venta;
 
 /**
  *
@@ -28,8 +34,20 @@ public class SesionManager {
         this.usuarioLogueado = usuario;
     }
 
+    // Modificado para incluir el reinicio de las instancias Singleton
     public void logout() {
         this.usuarioLogueado = null;
+        resetSingletons();  // Llamada al nuevo método que reinicia los Singletons
+    }
+
+    // Método que resetea todas las instancias Singleton
+    private void resetSingletons() {
+        MenuPrincipal.resetInstance();
+        Venta.resetInstance();
+        UsuariosPanel.resetInstance();
+        AvisosFrame.resetInstance();
+        Principal2_0.resetInstance();
+        Configuraciones.resetInstance();
     }
 
     public Usuario getUsuarioLogueado() {

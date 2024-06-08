@@ -54,8 +54,10 @@ public class Cobro extends javax.swing.JFrame {
     }
     
     public Cobro() {
-        initComponents();
         
+        initComponents();
+        setLocationRelativeTo(null); // Centra la ventana en la pantalla
+
         
         double importe = Double.parseDouble(recibi.getText());  
         
@@ -83,6 +85,8 @@ public class Cobro extends javax.swing.JFrame {
     
     public Cobro(double total, List<Producto> productos) {
         initComponents();
+        setLocationRelativeTo(null); // Centra la ventana en la pantalla
+
         this.productos = productos;
         this.pre = total;
         precio.setText("$" + String.format("%.2f", total));
@@ -317,45 +321,55 @@ public class Cobro extends javax.swing.JFrame {
     }//GEN-LAST:event_efectivoMouseClicked
 
     private void btnAceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAceptarActionPerformed
-    // Primero, verifica si algún método de pago ha sido seleccionado.
-    if (!efectivo.isSelected() && !tarjeta.isSelected()) {
-        JOptionPane.showMessageDialog(this, "Por favor, seleccione un método de pago.");
-        return;
-    }
-
-    // Intenta procesar el pago y generar/enviar el ticket.
-    try {
-        double pago = Double.parseDouble(recibi.getText());  // Intenta obtener el pago ingresado.
-        if (pago < pre) {
-            JOptionPane.showMessageDialog(this, "El monto pagado no es suficiente para cubrir el total de la compra.");
+        // Primero, verifica si algún método de pago ha sido seleccionado.
+        if (!efectivo.isSelected() && !tarjeta.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un método de pago.");
             return;
         }
-        cambio = pago - pre;
-        camb.setText("$" + String.format("%.2f", cambio));
 
-        // Genera el ticket y obtiene la ruta del PDF generado.
-        String pdfPath = generarPDF(productos, pre, pago, cambio);
-        if (pdfPath != null) {
-            // Si el archivo PDF se generó correctamente, procede a enviarlo por correo.
-            String emailDestino = txtCorreo.getText();
-            if (!emailDestino.isEmpty()) {
-                EnvioTicket.enviarConArchivo(emailDestino, pdfPath);  // Enviar el PDF por correo
-                JOptionPane.showMessageDialog(this, "El ticket ha sido enviado correctamente a: " + emailDestino);
-            } else {
-                JOptionPane.showMessageDialog(this, "Por favor, ingrese un correo electrónico válido.");
+        // Intenta procesar el pago y generar/enviar el ticket.
+        try {
+            double pago = Double.parseDouble(recibi.getText());  // Intenta obtener el pago ingresado.
+            if (pago < pre) {
+                JOptionPane.showMessageDialog(this, "El monto pagado no es suficiente para cubrir el total de la compra.");
+                return;
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Error al generar el ticket PDF.");
+            cambio = pago - pre;
+            camb.setText("$" + String.format("%.2f", cambio));
+
+            // Genera el ticket y obtiene la ruta del PDF generado.
+            String pdfPath = generarPDF(productos, pre, pago, cambio);
+            if (pdfPath != null) {
+                // Verifica si se ha ingresado un correo electrónico.
+                String emailDestino = txtCorreo.getText();
+                if (emailDestino.isEmpty()) {
+                    int opcion = JOptionPane.showConfirmDialog(this, "No ha ingresado un correo electrónico. ¿Desea continuar sin enviar el ticket por correo?", "Correo no ingresado", JOptionPane.YES_NO_OPTION);
+                    if (opcion == JOptionPane.NO_OPTION) {
+                        return; // Si el usuario selecciona NO, no se procede.
+                    }
+                } else {
+                    EnvioTicket.enviarConArchivo(emailDestino, pdfPath);  // Enviar el PDF por correo
+                    JOptionPane.showMessageDialog(this, "El ticket ha sido enviado correctamente a: " + emailDestino);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Error al generar el ticket PDF.");
+            }
+            
+            // Notifica a la ventana Venta que la venta se ha completado
+            if (ventaListener != null) {
+                ventaListener.onVentaCompleta();
+            }
+
+            // Cierra la ventana Cobro
+            dispose();
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Por favor, introduzca un monto válido en el campo 'Recibí'.");
         }
-    } catch (NumberFormatException e) {
-        JOptionPane.showMessageDialog(this, "Por favor, introduzca un monto válido en el campo 'Recibí'.");
-    }
-
-
     }//GEN-LAST:event_btnAceptarActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
+      dispose();
     }//GEN-LAST:event_jButton4ActionPerformed
 
 

@@ -57,6 +57,7 @@ public class UsuariosPanel extends javax.swing.JFrame {
 
     private  UsuariosPanel() {
         
+        setUndecorated(true); // Hacer que el JFrame sea indecorado
 
         animador = new AnimacionPanel(); // Inicializa el animador
 
@@ -82,7 +83,6 @@ public class UsuariosPanel extends javax.swing.JFrame {
  
                 configureButton();
                 
-         cargarAreasEnComboBox();
 
     }
     
@@ -106,14 +106,19 @@ public class UsuariosPanel extends javax.swing.JFrame {
         }
         dispose(); // Cierra esta ventana
     }
-    
+
+
     
     public void initialize(Usuario usuario) {
         this.usuarioLogueado = usuario;
         configurarVisibilidadComponentes();
         setVisible(true);  // Asegúrate de que la ventana se hace visible aquí o en el lugar desde donde llamas a initialize
     }
-    
+ 
+    // Método para reiniciar la instancia Singleton
+    public static void resetInstance() {
+        instance = null;
+    }
     
         private void configurarVisibilidadComponentes() {
         if (usuarioLogueado.getRol() == Usuario.Rol.EMPLEADO) {
@@ -167,7 +172,7 @@ public class UsuariosPanel extends javax.swing.JFrame {
 }
 
     
-    
+  
     
 
     private void configurarTablaYEventos() {
@@ -328,7 +333,7 @@ private void mostrarDialogoModificarUsuario(int usuarioId, int row) {
 
             int confirm = JOptionPane.showConfirmDialog(null, "Cambios detectados. ¿Desea guardar los cambios?", "Confirmar Actualización", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                boolean actualizado = dao.actualizarUsuario(usuarioId, nombreUsuarioNuevo, "", rolNuevo.toString(), emailNuevo, nombreCompletoNuevo, "", "");
+                boolean actualizado = dao.actualizarUsuario(usuarioId, nombreUsuarioNuevo, "", rolNuevo.toString(), emailNuevo, nombreCompletoNuevo);
                 if (actualizado) {
                     JOptionPane.showMessageDialog(null, "Usuario actualizado con éxito.");
                     actualizarTablaEmpleados();
@@ -392,7 +397,7 @@ private void ajustarTamanioColumnasYFilas() {
 
 
     
-    private void actualizarTablaEmpleados() {
+    public void actualizarTablaEmpleados() {
     DefaultTableModel model = (DefaultTableModel) Empleados.getModel();
     model.setRowCount(0); // Limpia la tabla completamente.
 
@@ -413,6 +418,7 @@ private void ajustarTamanioColumnasYFilas() {
                 
             });
         }
+        ajustarAlturaFilas();
  
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(this, "Error al conectar con la base de datos: " + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
@@ -444,9 +450,6 @@ private void ajustarTamanioColumnasYFilas() {
         NuevoUsuario = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         Empleados = new javax.swing.JTable();
-        btnPrecios = new javax.swing.JButton();
-        txtPorcentaje = new javax.swing.JTextField();
-        areaSeleccionada = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -612,13 +615,6 @@ private void ajustarTamanioColumnasYFilas() {
         ));
         jScrollPane1.setViewportView(Empleados);
 
-        btnPrecios.setText("jButton1");
-        btnPrecios.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnPreciosActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout Panel2Layout = new javax.swing.GroupLayout(Panel2);
         Panel2.setLayout(Panel2Layout);
         Panel2Layout.setHorizontalGroup(
@@ -630,18 +626,12 @@ private void ajustarTamanioColumnasYFilas() {
                     .addGroup(Panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(Panel2Layout.createSequentialGroup()
                             .addGap(9, 9, 9)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 734, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 437, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, Panel2Layout.createSequentialGroup()
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 734, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(Panel2Layout.createSequentialGroup()
                             .addComponent(NuevoUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(35, 35, 35)
-                            .addComponent(btnRecuperarToken)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(Panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(txtPorcentaje)
-                                .addComponent(btnPrecios)
-                                .addComponent(areaSeleccionada, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGap(20, 20, 20)))
+                            .addComponent(btnRecuperarToken)))
+                    .addContainerGap(457, Short.MAX_VALUE)))
         );
         Panel2Layout.setVerticalGroup(
             Panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -650,19 +640,11 @@ private void ajustarTamanioColumnasYFilas() {
                 .addGroup(Panel2Layout.createSequentialGroup()
                     .addGap(29, 29, 29)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 227, Short.MAX_VALUE)
-                    .addComponent(areaSeleccionada, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(18, 18, 18)
-                    .addComponent(txtPorcentaje, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(Panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(Panel2Layout.createSequentialGroup()
-                            .addGroup(Panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(NuevoUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(btnRecuperarToken, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGap(10, 10, 10))
-                        .addComponent(btnPrecios, javax.swing.GroupLayout.Alignment.TRAILING))
-                    .addGap(30, 30, 30)))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 295, Short.MAX_VALUE)
+                    .addGroup(Panel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(NuevoUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnRecuperarToken, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(40, 40, 40)))
         );
 
         jPanel6.add(Panel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 0, 1220, 610));
@@ -791,57 +773,6 @@ private void ajustarTamanioColumnasYFilas() {
 
 
 
-private void cargarAreasEnComboBox() {
-    try {
-        CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-        List<Area> areas = dao.obtenerAreas();
-        areaSeleccionada.removeAllItems();  // Limpiar el JComboBox antes de llenarlo
-        for (Area area : areas) {
-            areaSeleccionada.addItem(area.getNombreArea());  // Añade solo el nombre al JComboBox
-        }
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Error al cargar las áreas: " + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
-    }
-}
-
-// Método para obtener el ID del área seleccionada basado en el nombre
-private int obtenerAreaID(String nombreAreaSeleccionada) throws SQLException, IllegalArgumentException {
-    CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-    List<Area> areas = dao.obtenerAreas();
-    for (Area area : areas) {
-        if (area.getNombreArea().equals(nombreAreaSeleccionada)) {
-            return area.getAreaID();
-        }
-    }
-    throw new IllegalArgumentException("Área no encontrada.");
-}
-
-    private void btnPreciosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreciosActionPerformed
-        String nombreAreaSeleccionada = (String) areaSeleccionada.getSelectedItem();
-        if (nombreAreaSeleccionada == null || txtPorcentaje.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione un área y especifique un porcentaje.");
-            return;
-        }
-
-        try {
-            double porcentaje = Double.parseDouble(txtPorcentaje.getText().trim());
-            int areaID = obtenerAreaID(nombreAreaSeleccionada);
-
-            CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-            boolean actualizado = dao.actualizarPorcentajeGanancia(areaID, porcentaje);
-            if (actualizado) {
-                JOptionPane.showMessageDialog(this, "Porcentaje de ganancia actualizado con éxito para " + nombreAreaSeleccionada + ".");
-            } else {
-                JOptionPane.showMessageDialog(this, "No se pudo actualizar el porcentaje.");
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Por favor, introduzca un valor numérico válido para el porcentaje.");
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error al conectar con la base de datos: " + e.getMessage(), "Error de Conexión", JOptionPane.ERROR_MESSAGE);
-        } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_btnPreciosActionPerformed
 
     private void Menu2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Menu2MouseClicked
     // Mover dependiendo de la posición actual
@@ -1008,11 +939,8 @@ private int obtenerAreaID(String nombreAreaSeleccionada) throws SQLException, Il
     private javax.swing.JPanel Panel2;
     private javax.swing.JLabel Usuarios2;
     private javax.swing.JLabel Ventas2;
-    private javax.swing.JComboBox<String> areaSeleccionada;
-    private javax.swing.JButton btnPrecios;
     private javax.swing.JButton btnRecuperarToken;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextField txtPorcentaje;
     // End of variables declaration//GEN-END:variables
 }

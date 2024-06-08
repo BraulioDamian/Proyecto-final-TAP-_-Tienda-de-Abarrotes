@@ -8,6 +8,7 @@ import Consultas.CONSULTASDAO;
 import INVENTARIO.Principal2_0;
 import ConexionDB.Conexion_DB;
 import DBObjetos.*;
+import Graficas.AvisosFrame;
 import Principal.MenuPrincipal;
 import UniVentanas.MenuPrincipalWindow;
 import java.awt.event.KeyAdapter;
@@ -29,8 +30,10 @@ public class LOGINN extends javax.swing.JFrame {
 
     
     public LOGINN() {
+
         initComponents();
-        
+        setLocationRelativeTo(null); // Centra la ventana en la pantalla
+
         Estilos.addPlaceholderStyle(fieldUser);
         Estilos.addPlaceholderStyle(fieldPass);
         setupTextFieldNavigation();
@@ -255,6 +258,7 @@ public class LOGINN extends javax.swing.JFrame {
     } else {
         JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos");
     }
+    AvisosFrame.getInstance().comparar();
     }//GEN-LAST:event_txtAccederActionPerformed
 
     private Usuario obtenerUsuarioLogueado() {

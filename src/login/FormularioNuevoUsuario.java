@@ -48,13 +48,14 @@ AbrirVentana();
 
 private void AbrirVentana() {
 
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);  // Evita que la ventana se cierre automáticamente
+    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);  // Evita que la ventana se cierre automáticamente
     addWindowListener(new WindowAdapter() {
         @Override
         public void windowClosing(WindowEvent e) {
             cerrarYVolverAConfiguraciones();
         }
     });
+    
 }
     
 
@@ -176,66 +177,89 @@ private void AbrirVentana() {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+        private boolean validarCampos(String usuario, String contraseña, String correo, String nombre, String apellido) {
+        if (usuario.isEmpty() || contraseña.isEmpty() || correo.isEmpty() || nombre.isEmpty() || apellido.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor complete todos los campos requeridos.");
+            return false;
+        }
+
+        if (!nombre.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+            JOptionPane.showMessageDialog(this, "El nombre solo puede contener letras.");
+            return false;
+        }
+
+        if (!apellido.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+            JOptionPane.showMessageDialog(this, "El apellido solo puede contener letras.");
+            return false;
+        }
+
+        if (!correo.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
+            JOptionPane.showMessageDialog(this, "El formato del correo electrónico no es válido.");
+            return false;
+        }
+
+        if (contraseña.length() < 8) {
+            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 8 caracteres.");
+            return false;
+        }
+
+        return true;
+    }
+    
     private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
-     // Obtener valores de los campos de texto
+    // Obtener valores de los campos de texto
     String usuario = nomUsuario.getText().trim();
-    String contraseñaPlana = Contraseña.getText().trim();
+    String contraseñaPlana = new String(Contraseña.getPassword()).trim();
     String correo = Correo.getText().trim();
     String nombre = Nombre.getText().trim();
     String apellido = Apellido.getText().trim();
 
-
-    // Verifica que se hayan ingresado todos los campos
-    boolean camposValidos = !usuario.isEmpty() && !contraseñaPlana.isEmpty() && 
-                            !correo.isEmpty() && !nombre.isEmpty() && !apellido.isEmpty();
-
-
-    // Validación del formato del correo electrónico
-    boolean esCorreoValido = correo.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
-//    lblCorreo.setForeground(esCorreoValido ? Color.BLACK : Color.RED);
-
-    if (!esCorreoValido) {
-        JOptionPane.showMessageDialog(this, "El formato del correo electrónico no es válido.");
+    // Verificar campos
+    if (!validarCampos(usuario, contraseñaPlana, correo, nombre, apellido)) {
         return;
     }
-    // Verifica que se hayan respondido 3 preguntas
-    if (camposValidos) {
-        try {
-            // Hashea la contraseña antes de enviarla a la base de datos
-            String contraseñaHasheada = HashingUtil.hashPassword(contraseñaPlana);
-            if (contraseñaHasheada == null) {
-                throw new IllegalArgumentException("No se pudo hashear la contraseña.");
-            }
-            
-            // Aquí se debería crear una instancia de CONSULTASDAO (idealmente debería ser UsuarioDAO)
-            CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-            
-            // El método crearEmpleado ahora también incluye correo, nombre y apellido
-            Usuario.Rol rolEnum = Usuario.Rol.valueOf(rolSeleccionado.toUpperCase());
-boolean exito = dao.crearEmpleadosinToken(usuario, contraseñaHasheada, rolEnum, correo, nombre, apellido);
 
-          
-            
-            
-            if (exito) {
-                JOptionPane.showMessageDialog(this, "Empleado agregado correctamente.");
-                // Restablece el formulario
-                resetFormulario();
-            } else {
-                JOptionPane.showMessageDialog(this, "El nombre de usario ya existe, cree uno nuevo.");
+    try {
+        // Hashea la contraseña antes de enviarla a la base de datos
+        String contraseñaHasheada = HashingUtil.hashPassword(contraseñaPlana);
+        if (contraseñaHasheada == null) {
+            throw new IllegalArgumentException("No se pudo hashear la contraseña.");
+        }
+        
+        // Crear instancia de CONSULTASDAO
+        CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
+        
+        // El método crearEmpleado ahora también incluye correo, nombre y apellido
+        Usuario.Rol rolEnum = Usuario.Rol.valueOf(rolSeleccionado.toUpperCase());
+        boolean exito = dao.crearEmpleadosinToken(usuario, contraseñaHasheada, rolEnum, correo, nombre, apellido);
+
+        if (exito) {
+            JOptionPane.showMessageDialog(this, "Empleado agregado correctamente.");
+            // Restablece el formulario
+            //resetFormulario();
+                        // Cierra esta ventana y actualiza la tabla en UsuariosPanel
+            if (usuariosPanel != null) {
+                usuariosPanel.actualizarTablaEmpleados();  // Actualiza la tabla en UsuariosPanel
+                usuariosPanel.mostrar();  // Asegura que UsuariosPanel sea visible
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al conectar con la base de datos: " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+            this.dispose();  // Cierra FormularioNuevoUsuario
+
+        } else {
+            JOptionPane.showMessageDialog(this, "El nombre de usuario ya existe, cree uno nuevo.");
         }
-    } else {
-            JOptionPane.showMessageDialog(this, "Por favor complete todos los campos requeridos.");
-        }
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Error al conectar con la base de datos: " + ex.getMessage());
+    } catch (IllegalArgumentException ex) {
+        JOptionPane.showMessageDialog(this, ex.getMessage());
+    }
     
     AbrirVentana();
     }//GEN-LAST:event_btnAgregarActionPerformed
+ 
+ 
 
+    
+    
     private void NombreFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_NombreFocusGained
         if(Nombre.getText().equals("Nombre")){
             Nombre.setText(null);
@@ -245,73 +269,84 @@ boolean exito = dao.crearEmpleadosinToken(usuario, contraseñaHasheada, rolEnum,
     }//GEN-LAST:event_NombreFocusGained
 
     private void NombreFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_NombreFocusLost
-        if(Nombre.getText().length()==0){
+        if (Nombre.getText().length() == 0) {
             Estilos.addPlaceholderStyle(Nombre);
             Nombre.setText("Nombre");
+        } else if (!Nombre.getText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+            JOptionPane.showMessageDialog(this, "El nombre solo puede contener letras.");
+            Nombre.requestFocus();
         }
     }//GEN-LAST:event_NombreFocusLost
 
     private void ApellidoFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ApellidoFocusGained
-        if(Apellido.getText().equals("Apellido")){
+        if (Apellido.getText().equals("Apellido")) {
             Apellido.setText(null);
             Apellido.requestFocus();
-            Estilos.removePlaceholderStyle(Apellido);            
+            Estilos.removePlaceholderStyle(Apellido);
         }
     }//GEN-LAST:event_ApellidoFocusGained
 
     private void ApellidoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ApellidoFocusLost
-        if(Apellido.getText().length()==0){
+        if (Apellido.getText().length() == 0) {
             Estilos.addPlaceholderStyle(Apellido);
             Apellido.setText("Apellido");
+        } else if (!Apellido.getText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+")) {
+            JOptionPane.showMessageDialog(this, "El apellido solo puede contener letras.");
+            Apellido.requestFocus();
         }
     }//GEN-LAST:event_ApellidoFocusLost
 
     private void CorreoFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_CorreoFocusGained
-        if(Correo.getText().equals("Correo")){
+        if (Correo.getText().equals("Correo")) {
             Correo.setText(null);
             Correo.requestFocus();
-            Estilos.removePlaceholderStyle(Correo);            
+            Estilos.removePlaceholderStyle(Correo);
         }
     }//GEN-LAST:event_CorreoFocusGained
 
     private void CorreoFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_CorreoFocusLost
-        if(Correo.getText().length()==0){
+        if (Correo.getText().length() == 0) {
             Estilos.addPlaceholderStyle(Correo);
             Correo.setText("Correo");
+        } else if (!Correo.getText().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
+            JOptionPane.showMessageDialog(this, "El formato del correo electrónico no es válido.");
+            Correo.requestFocus();
         }
     }//GEN-LAST:event_CorreoFocusLost
 
     private void nomUsuarioFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_nomUsuarioFocusGained
-        if(nomUsuario.getText().equals("Nombre de usuario")){
+        if (nomUsuario.getText().equals("Nombre de usuario")) {
             nomUsuario.setText(null);
             nomUsuario.requestFocus();
-            Estilos.removePlaceholderStyle(nomUsuario);            
+            Estilos.removePlaceholderStyle(nomUsuario);
         }
     }//GEN-LAST:event_nomUsuarioFocusGained
 
     private void nomUsuarioFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_nomUsuarioFocusLost
-        if(nomUsuario.getText().length()==0){
+        if (nomUsuario.getText().length() == 0) {
             Estilos.addPlaceholderStyle(nomUsuario);
             nomUsuario.setText("Nombre de usuario");
         }
     }//GEN-LAST:event_nomUsuarioFocusLost
 
     private void ContraseñaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ContraseñaFocusGained
-        if(Contraseña.getText().equals("Contraseña")){
+        if (new String(Contraseña.getPassword()).equals("Contraseña")) {
             Contraseña.setText(null);
             Contraseña.requestFocus();
             Contraseña.setEchoChar('*');
             Estilos.removePlaceholderStyle(Contraseña);
-            //jPasswordField2.setEchoChar('\u0000');
-            
         }
     }//GEN-LAST:event_ContraseñaFocusGained
 
     private void ContraseñaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_ContraseñaFocusLost
-        if(Contraseña.getText().length()==0){
+        String contraseña = new String(Contraseña.getPassword());
+        if (contraseña.length() == 0) {
             Estilos.addPlaceholderStyle(Contraseña);
             Contraseña.setText("Contraseña");
-            //jPasswordField2.setEchoChar('*');
+            Contraseña.setEchoChar('\u0000');
+        } else if (contraseña.length() < 8) {
+            JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 8 caracteres.");
+            Contraseña.requestFocus();
         }
     }//GEN-LAST:event_ContraseñaFocusLost
 
@@ -332,7 +367,6 @@ boolean exito = dao.crearEmpleadosinToken(usuario, contraseñaHasheada, rolEnum,
     }//GEN-LAST:event_btnContraseñaActionPerformed
 
 private void resetFormulario() {
-    // Restablecer los campos del formulario
     nomUsuario.setText("");
     Contraseña.setText("");
     Correo.setText("");
@@ -341,13 +375,6 @@ private void resetFormulario() {
     contadorDeRespuestas = 0;
     preguntasSeleccionadas.clear();
     respuestasDadas.clear();
-    //lblmensaje.setText("");         // Limpiar mensajes de respuesta
-    // Restablecer los colores de las etiquetas a negro
-//    lblUsuario.setForeground(Color.BLACK);
-//    lblContraseña.setForeground(Color.BLACK);
-//    lblCorreo.setForeground(Color.BLACK);
-//    lblNombre.setForeground(Color.BLACK);
-//    lblApellido.setForeground(Color.BLACK);
 }
 
 

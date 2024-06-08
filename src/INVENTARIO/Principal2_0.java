@@ -35,6 +35,7 @@ import Principal.MenuPrincipal;
 import com.toedter.calendar.JDateChooser;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import javax.swing.JTextField;
 
@@ -57,6 +58,16 @@ public class Principal2_0 extends javax.swing.JFrame {
     private boolean menuDesplegado = false;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private boolean isCalendarOpen = false; // Controla si el calendario está abierto
+
+    
+    
+    // Variables para almacenar los valores originales
+private String originalNombre;
+private String originalMarca;
+private LocalDate originalFechaCaducidad;
+private String originalContenido;
+private String originalPrecio;
+private String originalUnidades;
 
     
        public Principal2_0() {
@@ -170,6 +181,10 @@ public class Principal2_0 extends javax.swing.JFrame {
         return instance;
     } 
     
+    // Método para reiniciar la instancia Singleton
+    public static void resetInstance() {
+        instance = null;
+    }
     
     private void configurarVisibilidadComponentes() {
         // Asegúrate de que los componentes están inicializados antes de llamar este método
@@ -863,10 +878,10 @@ private void agregarFilaProducto(DefaultTableModel model, Producto prod) {
     }//GEN-LAST:event_MenuMouseExited
 
     private void InventarioMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_InventarioMouseClicked
-       Principal2_0 principalWindow = Principal2_0.getInstance();
+//       Principal2_0 principalWindow = Principal2_0.getInstance();
         //principalWindow.setVentanaPrincipal(this);
-        principalWindow.setVisible(true);
-        this.setVisible(false);
+      //  principalWindow.setVisible(true);
+      //  this.setVisible(false);
     }//GEN-LAST:event_InventarioMouseClicked
 
     private void AnalisisMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_AnalisisMouseClicked
@@ -874,6 +889,7 @@ private void agregarFilaProducto(DefaultTableModel model, Producto prod) {
         avisosFrame.initialize(SesionManager.getInstance().getUsuarioLogueado());
         avisosFrame.setVisible(true);
         this.setVisible(false);
+        AvisosFrame.getInstance().comparar();
     }//GEN-LAST:event_AnalisisMouseClicked
 
     private void InicioMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_InicioMouseClicked
@@ -921,86 +937,107 @@ private void agregarFilaProducto(DefaultTableModel model, Producto prod) {
 
     private void tablitaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablitaMouseClicked
     int fila = tablita.getSelectedRow();
-
     if (fila != -1) {
+        String contenido = tablita.getValueAt(fila, 4).toString(); // Asume que la columna 4 tiene el contenido
+        asignarContenido(contenido);
+        
         String codigoBarras = tablita.getValueAt(fila, 0).toString();
-        String nombre = tablita.getValueAt(fila, 1).toString();
-        String marca = tablita.getValueAt(fila, 2).toString();
-        String unidades = tablita.getValueAt(fila, 3).toString();
-        String contenido = tablita.getValueAt(fila, 4).toString();
-        String precio = tablita.getValueAt(fila, 6).toString();
+        originalNombre = tablita.getValueAt(fila, 1).toString();
+        originalMarca = tablita.getValueAt(fila, 2).toString();
+        originalUnidades = tablita.getValueAt(fila, 3).toString();
+        originalContenido = tablita.getValueAt(fila, 4).toString();
+        String area = tablita.getValueAt(fila, 5).toString();
+        originalPrecio = tablita.getValueAt(fila, 6).toString();
 
         // Asumiendo que tienes JTextFields para cada uno de estos valores
         cod.setText(codigoBarras);
-        Nombre.setText(nombre);
-        Marca.setText(marca);
-        Unidades.setText(unidades);
-        Precio.setText(precio);
+        Nombre.setText(originalNombre);
+        Marca.setText(originalMarca);
+        Unidades.setText(originalUnidades);
+        Contenido.setText(originalContenido);
+        Precio.setText(originalPrecio);
 
         try {
             CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-            Caducidad.setText("" + dao.obtenerCaducidad(codigoBarras));
+            originalFechaCaducidad = dao.obtenerCaducidad(codigoBarras);
+            Caducidad.setText(originalFechaCaducidad != null ? originalFechaCaducidad.toString() : "");
         } catch (SQLException ex) {
             ex.printStackTrace();  // Imprimir detalles de error
         }
 
-        // Separar el contenido en número y unidad
-        separarContenido(contenido);
+ 
     } else {
         JOptionPane.showMessageDialog(null, "No se seleccionó ninguna fila");
     }
-
     }//GEN-LAST:event_tablitaMouseClicked
 
-    private void separarContenido(String contenido) {
-        String numero = contenido.replaceAll("[^0-9]", "");
-        String unidad = contenido.replaceAll("[0-9]", "").trim();
+private void asignarContenido(String contenido) {
+    // Eliminar espacios en blanco extra y separar números de texto
+    String[] partes = contenido.trim().split("\\s+", 2);
+    String numero = partes[0]; // Primera parte, números
+    String unidad = partes.length > 1 ? partes[1] : ""; // Segunda parte, unidad
 
-        Contenido.setText(numero);
+    Contenido.setText(numero);
 
-        for (int i = 0; i < jComboCont.getItemCount(); i++) {
-            if (jComboCont.getItemAt(i).equalsIgnoreCase(unidad)) {
-                jComboCont.setSelectedIndex(i);
-                break;
-            }
+    // Asignar la unidad al JComboBox si coincide, de lo contrario dejar el predeterminado "CONTENIDO"
+    boolean encontrado = false;
+    for (int i = 0; i < jComboCont.getItemCount(); i++) {
+        if (jComboCont.getItemAt(i).equalsIgnoreCase(unidad)) {
+            jComboCont.setSelectedIndex(i);
+            encontrado = true;
+            break;
         }
     }
+    if (!encontrado) {
+        jComboCont.setSelectedIndex(0); // Esto asume que "CONTENIDO" es el ítem por defecto en el índice 0
+    }
+}
+
+
 
     private void desplegableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_desplegableActionPerformed
-        String areaSeleccionada = (String) desplegable.getSelectedItem();
+   String areaSeleccionada = (String) desplegable.getSelectedItem();
 
-        int num = desplegable.getSelectedIndex();
-        int num1 = 0;
-        
-        if(MOD.isSelected()){            
+    // Vaciar los campos de texto
+    vaciarCamposDeTexto();
 
-            if (desplegable.getSelectedIndex() != 0) {
-                actualizarTablaInventarioPorArea(areaSeleccionada);
+    int num = desplegable.getSelectedIndex();
+    int num1 = 0;
+    
+    if(MOD.isSelected()){            
+        if (desplegable.getSelectedIndex() != 0) {
+            actualizarTablaInventarioPorArea(areaSeleccionada);
 
-                try{
-                    CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-                    int codigo = dao.getCod(num);
-                    num1 = codigo + 1;
-                    cod.setText("" + num1);
+            try{
+                CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
+                int codigo = dao.getCod(num);
+                num1 = codigo + 1;
+                cod.setText("" + num1);
 
-                } catch (SQLException ex) {
-                    //Logger.getLogger(Add.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println("ERROR AL CONECTAR CON LA BASE DE DATOS");
-                }
-
-            } else {
-                actualizarTablaInventario();
+            } catch (SQLException ex) {
+                //Logger.getLogger(Add.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("ERROR AL CONECTAR CON LA BASE DE DATOS");
             }
-        }else{
-            if (desplegable.getSelectedIndex() != 0) {
-                actualizarTablaInventarioPorArea(areaSeleccionada);               
-
-            } else {
-                actualizarTablaInventario();
-            }
+        } else {
+            actualizarTablaInventario();
         }
+    } else {
+        if (desplegable.getSelectedIndex() != 0) {
+            actualizarTablaInventarioPorArea(areaSeleccionada);               
+        } else {
+            actualizarTablaInventario();
+        }
+    }
     }//GEN-LAST:event_desplegableActionPerformed
-
+    // Método para vaciar los campos de texto
+    private void vaciarCamposDeTexto() {
+        Nombre.setText("");
+        Precio.setText("");
+        Marca.setText("");
+        Caducidad.setText("");
+        Contenido.setText("");
+        Unidades.setText("");
+    }
     private void NombreFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_NombreFocusGained
         if(Nombre.getText().equals("Nombre")){
             Nombre.setText(null);
@@ -1142,43 +1179,128 @@ private void agregarFilaProducto(DefaultTableModel model, Producto prod) {
         }
     }//GEN-LAST:event_addActionPerformed
 
+    private void restaurarValoresOriginales() {
+        Nombre.setText(originalNombre);
+        Marca.setText(originalMarca);
+        Caducidad.setText(originalFechaCaducidad != null ? originalFechaCaducidad.toString() : "");
+    }
+
+
     private void modificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modificarActionPerformed
-        String nombree = Nombre.getText();
-        int areaID = desplegable.getSelectedIndex();
-
-        double precioo = Double.parseDouble(Precio.getText());
-        int unidadess = Integer.parseInt(Unidades.getText());
-        int codigoB = Integer.parseInt(cod.getText());
-        
-        String areaSeleccionada = (String) desplegable.getSelectedItem();
-        int areaSelec = desplegable.getSelectedIndex();
-        
-        if(!Nombre.getText().isEmpty() && !Precio.getText().isEmpty() && !Marca.getText().isEmpty() && !Caducidad.getText().isEmpty() && !Contenido.getText().isEmpty() && !Unidades.getText().isEmpty()){
-            try{
-                CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
-                boolean exito = dao.actualizarProd(codigoB, precioo, unidadess);
-
-                if(exito){
-                    System.out.println("Producto " + nombree + " actualizado");
-                    
-                    actualizarTablaInventarioPorArea(areaSeleccionada);
-                    //actualizarTablaInventarioPorArea(nombree);
-                    
-                    Nombre.setText("");
-                    Precio.setText("");
-                    Marca.setText("");
-                    Caducidad.setText("");
-                    Contenido.setText("");
-                    Unidades.setText("");
-                    jComboCont.setSelectedIndex(areaSelec);
-                        
-                }else System.out.println("Producto " + nombree + " no actualizado");
-            }catch (SQLException ex) {
-                ex.printStackTrace();  // Imprimir detalles de error
-            }
-        }else JOptionPane.showMessageDialog(null, "ALGUNOS DE LOS CAMPOS ESTAN VACIOS");
+    String error = verificarCambiosProhibidos();
+    if (error != null) {
+        JOptionPane.showMessageDialog(null, error);
+        restaurarValoresOriginales(); // Asegúrate de que este método reestablezca los valores iniciales
+        return; // Detiene la ejecución adicional
+    }
+    
+    // Código para actualizar el producto si no hay errores de campos no modificables
+    actualizarProducto();
+    
     }//GEN-LAST:event_modificarActionPerformed
 
+ 
+    private String verificarCambiosProhibidos() {
+        StringBuilder camposModificados = new StringBuilder();
+        if (!Nombre.getText().equals(originalNombre)) {
+            if (camposModificados.length() > 0) camposModificados.append(", ");
+            camposModificados.append("nombre");
+        }
+        if (!Marca.getText().equals(originalMarca)) {
+            if (camposModificados.length() > 0) camposModificados.append(", ");
+            camposModificados.append("marca");
+        }
+        if (!Contenido.getText().equals(originalContenido)) {
+            if (camposModificados.length() > 0) camposModificados.append(", ");
+            camposModificados.append("contenido");
+        }
+
+        if (camposModificados.length() > 0) {
+            return "No se puede modificar: " + camposModificados.toString() + " del producto.";
+        }
+        return null; // No hubo cambios prohibidos
+    }
+
+
+    private boolean validarCampos() {
+       if (Nombre.getText().isEmpty() || Precio.getText().isEmpty() || Marca.getText().isEmpty() ||
+           Caducidad.getText().isEmpty() || Contenido.getText().isEmpty() || Unidades.getText().isEmpty()) {
+           JOptionPane.showMessageDialog(null, "Algunos de los campos están vacíos");
+           return false;
+       }
+       return true;
+   }
+
+   private boolean hayCambios() {
+       LocalDate nuevaFechaCaducidad = parseFechaCaducidad(Caducidad.getText());
+       if (nuevaFechaCaducidad == null) {
+           return false; // La fecha es inválida
+       }
+       return !Nombre.getText().equals(originalNombre) || !Marca.getText().equals(originalMarca) ||
+              !nuevaFechaCaducidad.equals(originalFechaCaducidad) || !Contenido.getText().equals(originalContenido) ||
+              !Precio.getText().equals(originalPrecio) || !Unidades.getText().equals(originalUnidades);
+   }
+
+    private boolean esModificable() {
+        LocalDate nuevaFechaCaducidad = parseFechaCaducidad(Caducidad.getText());
+        if (nuevaFechaCaducidad == null) {
+            return false; // La fecha es inválida
+        }
+        if (!Nombre.getText().equals(originalNombre) || !Marca.getText().equals(originalMarca) ||
+            !nuevaFechaCaducidad.equals(originalFechaCaducidad)) {
+            restaurarValoresOriginales();  // Restaura los valores antes de mostrar el mensaje
+            JOptionPane.showMessageDialog(null, "No es posible editar el Nombre, Marca o Fecha de Caducidad del producto");
+            return false;
+        }
+        return true;
+    }
+
+
+   private LocalDate parseFechaCaducidad(String fecha) {
+       try {
+           return LocalDate.parse(fecha);
+       } catch (DateTimeParseException e) {
+           JOptionPane.showMessageDialog(null, "Error en el formato de fecha: " + e.getMessage());
+           return null;
+       }
+   }   
+
+ private void actualizarProducto() {
+    // Convertir datos del formulario en formato adecuado para la base de datos
+    double precio;
+    int unidades;
+    LocalDate fechaCaducidad = LocalDate.parse(Caducidad.getText()); // Asume que ya ha sido validado
+    int codigoBarras = Integer.parseInt(cod.getText());
+
+    try {
+        precio = Double.parseDouble(Precio.getText());
+        unidades = Integer.parseInt(Unidades.getText());
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(null, "Error al convertir los datos numéricos: " + e.getMessage());
+        return;
+    }
+
+    // Llamada a la base de datos para actualizar los datos
+    try {
+        CONSULTASDAO dao = new CONSULTASDAO(Conexion_DB.getConexion());
+        boolean exito = dao.actualizarProd(codigoBarras, precio, unidades);
+
+        if (exito) {
+            JOptionPane.showMessageDialog(null, "Producto actualizado correctamente");
+            // Actualizar la tabla para reflejar los cambios
+            actualizarTablaInventario(); // Asume que este método refresca la tabla completamente
+        } else {
+            JOptionPane.showMessageDialog(null, "Error al actualizar el producto");
+        }
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(null, "Error al actualizar en la base de datos: " + ex.getMessage());
+        ex.printStackTrace();
+    }
+}
+  
+    
+    
+    
     private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
         String nombree = Nombre.getText();
         int areaID = desplegable.getSelectedIndex();

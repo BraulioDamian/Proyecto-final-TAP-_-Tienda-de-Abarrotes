@@ -65,6 +65,11 @@ public class MenuPrincipal extends javax.swing.JFrame {
         return instance;
     }
         
+    // Método para reiniciar la instancia Singleton
+    public static void resetInstance() {
+        instance = null;
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -399,6 +404,7 @@ public class MenuPrincipal extends javax.swing.JFrame {
         avisosFrame.initialize(SesionManager.getInstance().getUsuarioLogueado());
         avisosFrame.setVisible(true);
         this.setVisible(false);
+        AvisosFrame.getInstance().comparar();
     }//GEN-LAST:event_lblGraficasMouseClicked
 
     private void lblGraficasMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblGraficasMouseEntered
@@ -426,13 +432,16 @@ public class MenuPrincipal extends javax.swing.JFrame {
         Logout.setOpaque(false); // Elimina el color de fondo
         Logout.setBackground(null); // Restaura el color de fondo original
     }//GEN-LAST:event_LogoutMouseExited
-    // Método para cerrar sesión
-    private void logout() {
-        SesionManager.getInstance().logout();
-        LOGINN loginWindow = new LOGINN();
-        loginWindow.setVisible(true);
-        this.dispose();
-    }
+
+private void logout() {
+    SesionManager.getInstance().logout();  // Cierra la sesión y reinicia todas las instancias Singleton
+    LOGINN loginWindow = new LOGINN();  // Crea una nueva instancia de LOGINN
+    loginWindow.setVisible(true);  // Muestra la nueva ventana de inicio de sesión
+    this.dispose();  // Cierra la ventana del menú principal
+}
+
+
+
     /**
      * @param args the command line arguments
      */
